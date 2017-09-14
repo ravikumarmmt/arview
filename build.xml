@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="arview" default="build">
+<project name="antarview" default="build">
+
     <!-- intended to be ran before upload to the CI server -->
-    <target name="pre-upload" depends="phpcs, phpmd" />
+    <target name="pre-upload" depends="phpcs" />
     
-    <target name="build" depends="prepare,lint,phploc,pdepend,phpmd-ci,phpcs-ci,phpcpd,phpdoc,phpcb"/>
+    <target name="build" depends="prepare,lint, phpcs-ci"/>
 
     <target name="clean" unless="clean.done" description="Cleanup build artifacts">
         <delete dir="${basedir}/build/api"/>
@@ -14,7 +15,7 @@
         <property name="clean.done" value="true"/>
     </target>
 
-    <target name="prepare" unless="prepare.done" depends="clean,generate-code" description="Prepare for build">
+    <target name="prepare" unless="prepare.done" depends="clean" description="Prepare for build">
         <mkdir dir="${basedir}/build/api"/>
         <mkdir dir="${basedir}/build/code-browser"/>
         <mkdir dir="${basedir}/build/coverage"/>
@@ -59,104 +60,26 @@
        </apply>
    </target>
 
-   <target name="phploc" description="Measure project size using PHPLOC">
-          <!-- <exec executable="${basedir}/build/tools/phploc.phar"> -->
-           <exec executable="phploc">
-           <!-- exclude tests directory -->
-           <arg value="--exclude" />
-           <arg path="${basedir}/views" />
-            <arg value="--log-csv"/>
-            <arg path="${basedir}/build/logs/phploc.csv"/>
-            <arg value="--log-xml"/>
-            <arg path="${basedir}/build/logs/phploc.xml"/>
-           <arg path="${basedir}" />
-       </exec>
-   </target>    
-    
-	
-    <target name="phploc-ci" depends="prepare"
-            description="Measure project size using PHPLOC and log result in CSV and XML format">
-        <exec executable="phploc" >
-           <!-- exclude tests directory -->
-           <arg value="--exclude" />
-           <arg path="${basedir}/views" />         
-            <arg value="--log-csv"/>
-            <arg path="${basedir}/build/logs/phploc.csv"/>
-            <arg value="--log-xml"/>
-            <arg path="${basedir}/build/logs/phploc.xml"/>
-           <arg path="${basedir}" />
-        </exec>
-    </target>
-    
-    
-
-    <target name="pdepend" depends="prepare" description="Calculate software metrics using PHP_Depend">
-        <exec executable="pdepend">
-            <!-- <arg value="--ignore=${basedir}/views,${basedir}/docs" /> -->
-            <arg value="--ignore=${basedir}/views" />
-            <arg value="--jdepend-xml=${basedir}/build/logs/jdepend.xml"/>
-            <arg value="--jdepend-chart=${basedir}/build/pdepend/dependencies.svg"/>
-            <arg value="--overview-pyramid=${basedir}/build/pdepend/overview-pyramid.svg"/>
-            <arg path="${basedir}"/>
-        </exec>
-    </target>
-
-    <target name="phpmd" description="Perform project mess detection using PHPMD and print result in text format">
-        <exec executable="phpmd">
-            <arg path="${basedir}"/>
-            <arg value="text"/>
-            <arg path="${basedir}/build/phpmd.xml"/>
-        </exec>
-    </target>
-
-    <target name="phpmd-ci" depends="prepare"
-            description="Perform project mess detection using PHPMD and log result in XML format">
-        <exec executable="phpmd" >
-            <arg path="${basedir}"/>
-            <arg value="xml"/>
-            <arg path="${basedir}/build/phpmd.xml"/>
-            <arg value="--reportfile"/>
-            <arg path="${basedir}/build/logs/pmd.xml"/>
-        </exec>
-    </target>
-
     <target name="phpcs"
             description="Find coding standard violations using PHP_CodeSniffer and print result in text format">
-        <exec executable="phpcs" taskname="phpcs">
+        <exec executable="${basedir}/build/tools/phpcs.phar" taskname="phpcs">
             <arg value="--standard=PSR2"/>
             <arg value="--extensions=php"/>
-            
-            <arg value="--ignore=${basedir}/views" />
+            <arg value="--ignore=${basedir}/views, index.php, ${basedir}/controllers/admin/index.php, ${basedir}/controllers/hook/index.php, ${basedir}/install" />
             <arg path="${basedir}"/>
         </exec>
     </target>
 
     <target name="phpcs-ci" depends="prepare"
             description="Find coding standard violations using PHP_CodeSniffer and log result in XML format">
-        <exec executable="phpcs" output="/dev/null" >
+        <exec executable="${basedir}/build/tools/phpcs.phar"  output="/dev/null" taskname="phpcs">
             <arg value="--report=checkstyle"/>
             <arg value="--report-file=${basedir}/build/logs/checkstyle.xml"/>
             <arg value="--standard=PSR2"/>
             <arg value="--extensions=php"/>
-           <arg value="--ignore=${basedir}/views" />
+            <arg value="--ignore=${basedir}/views, index.php, ${basedir}/controllers/admin/index.php, ${basedir}/controllers/hook/index.php, ${basedir}/install" />
             <arg path="${basedir}"/>
         </exec>
-    </target>
-
-    <target name="phpcpd" description="Find duplicate code using PHPCPD">
-        <exec executable="${basedir}/build/tools/phpcpd.phar" taskname="phpcpd">
-            <arg path="${basedir}"/>
-        </exec>
-    </target>
-
-    <target name="phpcpd-ci" depends="prepare"
-            description="Find duplicate code using PHPCPD and log result in XML format">
-        <exec executable="${basedir}/build/tools/phpcpd.phar" taskname="phpcpd">
-            <arg value="--log-pmd"/>
-            <arg path="${basedir}/build/logs/pmd-cpd.xml"/>
-            <arg path="${basedir}"/>
-        </exec>
-    </target>
-
+    </target>	
  
 </project>
